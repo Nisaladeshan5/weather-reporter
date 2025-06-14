@@ -26,15 +26,6 @@ function Weather() {
       setWeather(data);
       setLocation(city);
       updateSearchHistory(city);
-
-      // Update search history, avoid duplicates (case-insensitive)
-      setSearchHistory((prev) => {
-        const exists = prev.some(
-          (item) => item.toLowerCase() === city.toLowerCase()
-        );
-        if (exists) return prev;
-        return [city, ...prev].slice(0, 5); // keep max 5 recent searches
-      });
     } catch (err) {
       setError(err.message);
       setWeather(null);
@@ -45,74 +36,53 @@ function Weather() {
 
   useEffect(() => {
     fetchWeather(location);
+    const stored = localStorage.getItem("searchHistory");
+    if (stored) setSearchHistory(JSON.parse(stored));
   }, []);
 
   const handleSearch = (e) => {
     e.preventDefault();
-    if (inputValue.trim() === "") return;
+    if (!inputValue.trim()) return;
     fetchWeather(inputValue.trim());
     setShowSuggestions(false);
   };
 
-  useEffect(() => {
-    const storedHistory = JSON.parse(
-      localStorage.getItem("searchHistory") || "[]"
-    );
-    setSearchHistory(storedHistory);
-  }, []);
-
   const updateSearchHistory = (city) => {
-    setSearchHistory((prev) => {
-      const updated = [...new Set([city, ...prev])].slice(0, 5); // max 5 recent
-      localStorage.setItem("searchHistory", JSON.stringify(updated));
-      return updated;
-    });
+    const updated = [city, ...searchHistory.filter(c => c.toLowerCase() !== city.toLowerCase())].slice(0, 5);
+    setSearchHistory(updated);
+    localStorage.setItem("searchHistory", JSON.stringify(updated));
   };
 
   return (
-    <div className="min-h-[100vh] flex items-center justify-center px-4 py-10 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500">
-      <div className="h-full bg-white/10 backdrop-blur-md border border-white/30 rounded-3xl shadow-xl w-full max-w-screen p-6 text-white">
-        {/* Search bar */}
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 px-8 md:px-9 py-8">
+      <div className="bg-white/10 backdrop-blur-md border border-white/30 rounded-3xl shadow-xl w-full max-w-4xl p-6 text-white flex flex-col justify-between min-h-[80vh]">
+        {/* Search Bar */}
         <form
           onSubmit={handleSearch}
-          className="mb-4 flex justify-center w-full"
+          className="mb-6 flex justify-center w-full relative"
           autoComplete="off"
         >
-          <label htmlFor="city-search" className="sr-only">
-            Search city
-          </label>
           <div className="relative w-4/5 max-w-lg">
             <input
-              id="city-search"
               type="text"
               value={inputValue}
               onChange={(e) => {
                 setInputValue(e.target.value);
                 setShowSuggestions(true);
               }}
-              onBlur={() => {
-                // Delay hiding suggestions to allow click
-                setTimeout(() => setShowSuggestions(false), 100);
-              }}
-              onFocus={() => {
-                if (searchHistory.length > 0) setShowSuggestions(true);
-              }}
+              onFocus={() => setShowSuggestions(searchHistory.length > 0)}
+              onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
               placeholder="Search city"
-              autoComplete="off"
-              className="w-full rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-white placeholder-white/70 px-3 py-2 text-sm focus:outline-none min-w-0"
-              aria-autocomplete="list"
-              aria-controls="search-suggestions"
-              aria-expanded={showSuggestions}
-              aria-haspopup="listbox"
+              className="w-full rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-white placeholder-white/70 px-4 py-4 text-lg focus:outline-none"
             />
             <button
               type="submit"
               aria-label="Search"
-              className="absolute right-[1px] top-1/2 -translate-y-1/2 bg-purple-600 hover:bg-purple-700 text-white px-4 sm:px-3 py-2 text-sm font-semibold transition duration-300 active:scale-95 flex items-center rounded-full rounded-l-none"
+              className="absolute right-[1px] top-1/2 -translate-y-1/2 bg-purple-600 hover:bg-purple-700 text-white px-5 sm:px-4 py-4 text-lg font-semibold transition duration-300 active:scale-95 flex items-center justify-center rounded-full rounded-l-none"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className="h-4 w-4 mr-1"
+                className="h-5 w-5"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -128,26 +98,20 @@ function Weather() {
             </button>
 
             {showSuggestions && searchHistory.length > 0 && (
-              <ul
-                id="search-suggestions"
-                role="listbox"
-                className="absolute z-10 w-full bg-white/20 backdrop-blur-md border border-white/30 rounded-b-xl max-h-48 overflow-auto text-white text-sm"
-              >
+              <ul className="absolute top-full mt-1 w-full bg-white/20 text-white rounded-xl text-sm max-h-40 overflow-y-auto backdrop-blur-md border border-white/30 shadow-lg z-10">
                 {searchHistory
-                  .filter((city) =>
-                    city.toLowerCase().startsWith(inputValue.toLowerCase())
+                  .filter((c) =>
+                    c.toLowerCase().startsWith(inputValue.toLowerCase())
                   )
-                  .map((city) => (
+                  .map((city, index) => (
                     <li
-                      key={city}
-                      role="option"
-                      tabIndex={-1}
-                      onMouseDown={(e) => {
-                        e.preventDefault();
+                      key={index}
+                      onMouseDown={() => {
                         setInputValue(city);
                         setShowSuggestions(false);
+                        fetchWeather(city);
                       }}
-                      className="cursor-pointer px-3 py-2 hover:bg-purple-600"
+                      className="px-4 py-2 cursor-pointer hover:bg-white/30 transition"
                     >
                       {city}
                     </li>
@@ -157,6 +121,7 @@ function Weather() {
           </div>
         </form>
 
+        {/* Loading */}
         {loading && (
           <div className="flex justify-center my-4">
             <svg
@@ -182,64 +147,70 @@ function Weather() {
           </div>
         )}
 
-        {error && <p className="text-center text-red-500 text-sm">{error}</p>}
+        {/* Error */}
+        {error && (
+          <p className="text-center text-red-500 text-sm">{error}</p>
+        )}
 
-        {!loading && !error && weather && weather.current && (
+        {/* Weather Display */}
+        {!loading && !error && weather && (
           <>
-            {/* Location and time */}
-            <div className="text-center lg:text-left">
-              <h2 className="text-base sm:text-xl font-bold mb-1">
+            <div className="text-center">
+              <h2 className="text-4xl sm:text-6xl font-bold mb-1">
                 {weather.location.name}
               </h2>
-              <p className="text-xs sm:text-sm">{weather.location.localtime}</p>
+              <p className="text-2xl sm:text-2xl">
+                {weather.location.localtime}
+              </p>
             </div>
 
-            {/* Weather icon and temp */}
-            <div className="flex flex-col sm:flex-row items-center justify-center my-3 gap-y-2 sm:gap-x-4">
+            <div className="flex flex-col sm:flex-row items-center justify-center my-6 gap-4">
               <img
                 src={`https:${weather.current.condition.icon}`}
                 alt="weather icon"
-                className="w-12 h-12 sm:w-16 sm:h-16"
+                className="w-14 h-14 sm:w-20 sm:h-20"
               />
-              <div className="text-center sm:text-left">
-                <p className="text-xs sm:text-sm font-semibold">
+              <div className="text-left">
+                <p className="text-2xl font-semibold">
                   {weather.current.condition.text}
                 </p>
-                <p className="text-2xl sm:text-3xl font-bold">
+                <p className="text-5xl sm:text-6xl font-bold">
                   {weather.current.temp_c}°C
                 </p>
               </div>
             </div>
 
-            {/* Weather details */}
-            <div className="grid grid-cols-2 gap-2 text-xs sm:text-sm sm:grid-cols-3">
-              <div className="bg-white/10 p-2 rounded-xl">
-                <p className="uppercase text-gray-200">feels like</p>
-                <p className="font-semibold">{weather.current.feelslike_c}°C</p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-2xl">
+              <div className="bg-white/10 p-3 rounded-xl">
+                <p className="uppercase text-gray-200">Feels Like</p>
+                <p className="font-semibold">
+                  {weather.current.feelslike_c}°C
+                </p>
               </div>
-              <div className="bg-white/10 p-2 rounded-xl">
+              <div className="bg-white/10 p-3 rounded-xl">
                 <p className="uppercase text-gray-200">Humidity</p>
                 <p className="font-semibold">{weather.current.humidity}%</p>
               </div>
-              <div className="bg-white/10 p-2 rounded-xl">
+              <div className="bg-white/10 p-3 rounded-xl">
                 <p className="uppercase text-gray-200">Wind</p>
-                <p className="font-semibold">{weather.current.wind_kph} km/h</p>
+                <p className="font-semibold">
+                  {weather.current.wind_kph} km/h
+                </p>
               </div>
-              <div className="bg-white/10 p-2 rounded-xl">
+              <div className="bg-white/10 p-3 rounded-xl">
                 <p className="uppercase text-gray-200">UV Index</p>
                 <p className="font-semibold">{weather.current.uv}</p>
               </div>
-              <div className="bg-white/10 p-2 rounded-xl">
+              <div className="bg-white/10 p-3 rounded-xl">
                 <p className="uppercase text-gray-200">Pressure</p>
                 <p className="font-semibold">
                   {weather.current.pressure_mb} mb
                 </p>
               </div>
-              <div className="bg-white/10 p-2 rounded-xl">
-                <p className="uppercase text-gray-200">Wind Dir</p>
+              <div className="bg-white/10 p-3 rounded-xl">
+                <p className="uppercase text-gray-200 ">Wind Dir</p>
                 <p className="font-semibold">{weather.current.wind_dir}</p>
               </div>
-              
             </div>
           </>
         )}
