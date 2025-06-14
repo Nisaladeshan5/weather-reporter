@@ -156,31 +156,31 @@ function Weather() {
         {!loading && !error && weather && (
           <>
             <div className="text-center">
-              <h2 className="text-4xl sm:text-6xl font-bold mb-1">
+              <h2 className="text-4xl md:text-6xl font-bold mb-1">
                 {weather.location.name}
               </h2>
-              <p className="text-2xl sm:text-2xl">
+              <p className="text-lg md:text-3xl">
                 {weather.location.localtime}
               </p>
             </div>
 
-            <div className="flex flex-col sm:flex-row items-center justify-center my-6 gap-4">
+            <div className="flex flex-col md:flex-row items-center justify-center my-5 gap-0 md:gap-5 py-3">
               <img
                 src={`https:${weather.current.condition.icon}`}
                 alt="weather icon"
-                className="w-14 h-14 sm:w-20 sm:h-20"
+                className="w-20 h-20 md:w-24 md:h-24 "
               />
-              <div className="text-left">
+              <div className="text-center md:text-left">
                 <p className="text-2xl font-semibold">
                   {weather.current.condition.text}
                 </p>
-                <p className="text-5xl sm:text-6xl font-bold">
+                <p className="text-5xl md:text-6xl font-bold">
                   {weather.current.temp_c}°C
                 </p>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-2xl">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-base md:text-2xl">
               <div className="bg-white/10 p-3 rounded-xl">
                 <p className="uppercase text-gray-200">Feels Like</p>
                 <p className="font-semibold">
