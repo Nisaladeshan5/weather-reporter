@@ -54,7 +54,7 @@ function Weather() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 px-8 md:px-9 py-8">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 px-8 md:px-9 py-6">
       <div className="bg-white/10 backdrop-blur-md border border-white/30 rounded-3xl shadow-xl w-full max-w-4xl p-6 text-white flex flex-col justify-between min-h-[80vh]">
         {/* Search Bar */}
         <form
@@ -73,7 +73,7 @@ function Weather() {
               onFocus={() => setShowSuggestions(searchHistory.length > 0)}
               onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
               placeholder="Search city"
-              className="w-full rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-white placeholder-white/70 px-4 py-4 text-lg focus:outline-none"
+              className="w-full rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-white placeholder-white/70 px-4 py-3 lg:py-4 text-lg focus:outline-none"
             />
             <button
               type="submit"
