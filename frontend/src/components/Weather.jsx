@@ -71,7 +71,7 @@ function Weather() {
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-6 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500">
-      <div className="bg-white/10 backdrop-blur-md border border-white/30 rounded-3xl shadow-xl w-full max-w-[500px] p-6 text-white">
+      <div className="bg-white/10 backdrop-blur-md border border-white/30 rounded-3xl shadow-xl w-full max-w-[700px] p-6 text-white">
         {/* Search bar */}
         <form
           onSubmit={handleSearch}
